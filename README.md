@@ -164,3 +164,27 @@ Script `debug.sh` cung cấp các lệnh tiện ích để quản lý và debug 
 # Truy cập vào MySQL
 ./debug.sh mysql
 ```
+
+## 9. Chuẩn Bị File Excel Để Import Danh Sách Nhân Viên
+
+Để sử dụng tính năng import danh sách nhân viên từ file Excel, bạn cần chuẩn bị file theo đúng định dạng sau:
+
+*   File phải là định dạng `.xlsx` hoặc `.xls`.
+*   Dữ liệu nhân viên phải nằm ở sheet đầu tiên của file Excel.
+*   Dòng đầu tiên của sheet sẽ được coi là dòng tiêu đề và sẽ được bỏ qua khi import.
+*   Dữ liệu nhân viên bắt đầu từ dòng thứ hai.
+*   File Excel phải có đúng 3 cột với tiêu đề (hoặc thứ tự) như sau:
+    1.  **Mã số nhân viên**: Mã định danh duy nhất cho mỗi nhân viên.
+    2.  **Tên nhân viên**: Họ và tên đầy đủ của nhân viên.
+    3.  **Phòng ban**: Tên phòng ban hoặc bộ phận mà nhân viên đó thuộc về.
+
+**Ví dụ cấu trúc file Excel:**
+
+| Mã số nhân viên | Tên nhân viên     | Phòng ban     |
+|-----------------|-------------------|---------------|
+| NV001           | Nguyễn Văn A      | Kỹ thuật      |
+| NV002           | Trần Thị B        | Kinh doanh    |
+| NV003           | Lê Văn C          | Nhân sự       |
+| ...             | ...               | ...           |
+
+Đảm bảo rằng không có các ô bị merge (trộn ô) trong vùng dữ liệu nhân viên. Dữ liệu ở các cột khác (nếu có) sẽ bị bỏ qua.
