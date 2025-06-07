@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Trị - Quay Thưởng</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 QUẢN TRỊ QUAY THƯỞNG</h1>
+            <nav>
+                <a href="/" class="nav-link">🏠 Trang chủ</a>
+                <a href="/admin/export" class="nav-link export-btn">📊 Xuất Excel</a>
+            </nav>
+        </header>
+
+        <!-- Thông báo -->
+        <div class="alerts">
+            <script>
+                const urlParams = new URLSearchParams(window.location.search);
+                const message = urlParams.get('message');
+                
+                if (urlParams.get('success') === 'upload') {
+                    const msg = message ? decodeURIComponent(message) : 'Upload file Excel thành công!';
+                    document.write('<div class="alert success">✅ ' + msg.replace(/\n/g, '<br>') + '</div>');
+                } else if (urlParams.get('success') === 'save') {
+                    document.write('<div class="alert success">✅ Lưu nhân viên thành công!</div>');
+                } else if (urlParams.get('success') === 'delete') {
+                    document.write('<div class="alert success">✅ Xóa nhân viên thành công!</div>');
+                } else if (urlParams.get('success') === 'reset') {
+                    document.write('<div class="alert success">✅ Reset trạng thái thành công!</div>');
+                } else if (urlParams.get('error')) {
+                    const msg = message ? decodeURIComponent(message) : 'Có lỗi xảy ra!';
+                    document.write('<div class="alert error">❌ ' + msg.replace(/\n/g, '<br>') + '</div>');
+                }
+            </script>
+        </div>
+
+        <main>
+            <!-- Cấu hình sự kiện -->
+            <section class="config-section">
+                <h2>🎨 Cấu Hình Giao Diện Sự Kiện</h2>
+                <form action="/admin/config" method="post" class="config-form">
+                    <div class="config-tabs">
+                        <button type="button" class="tab-btn active" data-tab="basic">Cơ bản</button>
+                        <button type="button" class="tab-btn" data-tab="background">Ảnh nền</button>
+                        <button type="button" class="tab-btn" data-tab="colors">Màu sắc</button>
+                        <button type="button" class="tab-btn" data-tab="display">Hiển thị</button>
+                        <button type="button" class="tab-btn" data-tab="effects">Hiệu ứng</button>
+                    </div>
+
+                    <div class="tab-content" id="basic">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="event_title">Tiêu đề sự kiện:</label>
+                                <input type="text" id="event_title" name="event_title" 
+                                       value="<%= config.event_title || 'QUAY THƯỞNG NỘI BỘ' %>" 
+                                       placeholder="QUAY THƯỞNG NỘI BỘ" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="event_subtitle">Phụ đề:</label>
+                                <input type="text" id="event_subtitle" name="event_subtitle" 
+                                       value="<%= config.event_subtitle || 'Chúc mừng những người may mắn!' %>" 
+                                       placeholder="Chúc mừng những người may mắn!">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="logo_url">URL Logo (tùy chọn):</label>
+                            <input type="url" id="logo_url" name="logo_url" 
+                                   value="<%= config.logo_url || '' %>" 
+                                   placeholder="https://example.com/logo.png">
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="background" style="display: none;">
+                        <div class="background-section">
+                            <h3>🖼️ Cấu Hình Ảnh Nền</h3>
+                            
+                            <!-- URL Ảnh Nền -->
+                            <div class="form-group">
+                                <label for="background_image_url">URL Ảnh Nền:</label>
+                                <input type="url" id="background_image_url" name="background_image" 
+                                       value="<%= config.background_image || '' %>" 
+                                       placeholder="https://example.com/background.jpg"
+                                       onchange="previewBackgroundUrl(this.value)">
+                                <p class="help-text">
+                                    📌 Nhập URL ảnh nền từ internet (JPG, PNG, WEBP)<br>
+                                    🎯 Khuyến nghị: 1920x1080px (Full HD) hoặc cao hơn
+                                </p>
+                            </div>
+
+                            <!-- Preview Ảnh Nền -->
+                            <div class="background-preview" id="backgroundPreview">
+                                <% if (config.background_image) { %>
+                                    <img src="<%= config.background_image %>" alt="Background Preview" class="preview-image">
+                                    <button type="button" class="btn btn-warning" onclick="removeBackground()">🗑️ Xóa ảnh nền</button>
+                                <% } else { %>
+                                    <div class="no-background">
+                                        <p>Chưa có ảnh nền. Nhập URL ảnh để xem trước.</p>
+                                    </div>
+                                <% } %>
+                            </div>
+
+                            <!-- Cấu hình Ảnh Nền -->
+                            <div class="background-settings">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="background_position">Vị trí ảnh nền:</label>
+                                        <select id="background_position" name="background_position">
+                                            <option value="center" <%= config.background_position === 'center' || !config.background_position ? 'selected' : '' %>>Giữa</option>
+                                            <option value="top" <%= config.background_position === 'top' ? 'selected' : '' %>>Trên</option>
+                                            <option value="bottom" <%= config.background_position === 'bottom' ? 'selected' : '' %>>Dưới</option>
+                                            <option value="left" <%= config.background_position === 'left' ? 'selected' : '' %>>Trái</option>
+                                            <option value="right" <%= config.background_position === 'right' ? 'selected' : '' %>>Phải</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="background_size">Kích thước ảnh nền:</label>
+                                        <select id="background_size" name="background_size">
+                                            <option value="cover" <%= config.background_size === 'cover' || !config.background_size ? 'selected' : '' %>>Phủ đầy (Cover)</option>
+                                            <option value="contain" <%= config.background_size === 'contain' ? 'selected' : '' %>>Vừa khung (Contain)</option>
+                                            <option value="100% 100%" <%= config.background_size === '100% 100%' ? 'selected' : '' %>>Kéo giãn đầy</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="background_opacity">Độ mờ overlay (0-100%):</label>
+                                    <input type="range" id="background_opacity" name="background_opacity" 
+                                           min="0" max="100" value="<%= config.background_opacity || '30' %>"
+                                           oninput="updateOpacityValue(this.value)">
+                                    <span id="opacityValue"><%= config.background_opacity || '30' %>%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="colors" style="display: none;">
+                        <!-- Gradient Background Section -->
+                        <div class="gradient-section">
+                            <h3>🌈 Màu Nền Gradient</h3>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="use_gradient" name="use_gradient" value="true"
+                                           <%= config.use_gradient === 'true' ? 'checked' : '' %>
+                                           onchange="toggleGradientOptions(this.checked)">
+                                    Sử dụng màu nền gradient thay vì màu đơn
+                                </label>
+                            </div>
+                            
+                            <div class="gradient-options" id="gradientOptions" style="display: <%= config.use_gradient === 'true' ? 'block' : 'none' %>;">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="gradient_color1">Màu gradient 1:</label>
+                                        <div class="color-input-group">
+                                            <input type="color" id="gradient_color1" name="gradient_color1" 
+                                                   value="<%= config.gradient_color1 || '#667eea' %>">
+                                            <input type="text" class="color-text" 
+                                                   value="<%= config.gradient_color1 || '#667eea' %>">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="gradient_color2">Màu gradient 2:</label>
+                                        <div class="color-input-group">
+                                            <input type="color" id="gradient_color2" name="gradient_color2" 
+                                                   value="<%= config.gradient_color2 || '#764ba2' %>">
+                                            <input type="text" class="color-text" 
+                                                   value="<%= config.gradient_color2 || '#764ba2' %>">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="gradient_direction">Hướng gradient:</label>
+                                        <select id="gradient_direction" name="gradient_direction">
+                                            <option value="to right" <%= config.gradient_direction === 'to right' || !config.gradient_direction ? 'selected' : '' %>>Ngang (trái → phải)</option>
+                                            <option value="to left" <%= config.gradient_direction === 'to left' ? 'selected' : '' %>>Ngang (phải → trái)</option>
+                                            <option value="to bottom" <%= config.gradient_direction === 'to bottom' ? 'selected' : '' %>>Dọc (trên → dưới)</option>
+                                            <option value="to top" <%= config.gradient_direction === 'to top' ? 'selected' : '' %>>Dọc (dưới → trên)</option>
+                                            <option value="45deg" <%= config.gradient_direction === '45deg' ? 'selected' : '' %>>Chéo (45°)</option>
+                                            <option value="135deg" <%= config.gradient_direction === '135deg' ? 'selected' : '' %>>Chéo (135°)</option>
+                                            <option value="radial" <%= config.gradient_direction === 'radial' ? 'selected' : '' %>>Tròn (từ giữa)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="gradient_opacity">Độ mờ gradient (0-100%):</label>
+                                        <input type="range" id="gradient_opacity" name="gradient_opacity" 
+                                               min="0" max="100" value="<%= config.gradient_opacity || '80' %>"
+                                               oninput="updateGradientOpacityValue(this.value)">
+                                        <span id="gradientOpacityValue"><%= config.gradient_opacity || '80' %>%</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Gradient Preview -->
+                                <div class="gradient-preview" id="gradientPreview">
+                                    <div class="preview-box" style="background: linear-gradient(<%= config.gradient_direction || 'to right' %>, <%= config.gradient_color1 || '#667eea' %>, <%= config.gradient_color2 || '#764ba2' %>); opacity: <%= (config.gradient_opacity || 80) / 100 %>;"></div>
+                                    <p>Xem trước gradient</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Regular Colors Section -->
+                        <div class="regular-colors-section">
+                            <h3>🎨 Màu Sắc Giao Diện</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="primary_color">Màu chính:</label>
+                                    <div class="color-input-group">
+                                        <input type="color" id="primary_color" name="primary_color" 
+                                               value="<%= config.primary_color || '#4CAF50' %>">
+                                        <input type="text" class="color-text" 
+                                               value="<%= config.primary_color || '#4CAF50' %>">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="secondary_color">Màu phụ:</label>
+                                    <div class="color-input-group">
+                                        <input type="color" id="secondary_color" name="secondary_color" 
+                                               value="<%= config.secondary_color || '#FFC107' %>">
+                                        <input type="text" class="color-text" 
+                                               value="<%= config.secondary_color || '#FFC107' %>">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group" id="backgroundColorGroup" style="display: <%= config.use_gradient === 'true' ? 'none' : 'block' %>;">
+                                    <label for="background_color">Màu nền:</label>
+                                    <div class="color-input-group">
+                                        <input type="color" id="background_color" name="background_color" 
+                                               value="<%= config.background_color || '#1a1a1a' %>">
+                                        <input type="text" class="color-text" 
+                                               value="<%= config.background_color || '#1a1a1a' %>">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="text_color">Màu chữ:</label>
+                                    <div class="color-input-group">
+                                        <input type="color" id="text_color" name="text_color" 
+                                               value="<%= config.text_color || '#ffffff' %>">
+                                        <input type="text" class="color-text" 
+                                               value="<%= config.text_color || '#ffffff' %>">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="display" style="display: none;">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="show_winner_list" value="true" 
+                                       <%= config.show_winner_list === 'true' ? 'checked' : '' %>>
+                                Hiển thị danh sách người trúng thưởng
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="effects" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="animation_speed">Tốc độ animation:</label>
+                                <select id="animation_speed" name="animation_speed">
+                                    <option value="slow" <%= config.animation_speed === 'slow' ? 'selected' : '' %>>Chậm (5s)</option>
+                                    <option value="normal" <%= config.animation_speed === 'normal' || !config.animation_speed ? 'selected' : '' %>>Bình thường (3s)</option>
+                                    <option value="fast" <%= config.animation_speed === 'fast' ? 'selected' : '' %>>Nhanh (2s)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="sound_enabled" value="true" 
+                                           <%= config.sound_enabled === 'true' ? 'checked' : '' %>>
+                                    Bật hiệu ứng âm thanh
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-actions">
+                        <button type="submit" class="btn btn-primary">💾 Lưu cấu hình</button>
+                        <a href="/" target="_blank" class="btn btn-secondary">👀 Xem trước</a>
+                        <button type="button" class="btn btn-warning" onclick="resetConfig()">🔄 Reset mặc định</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Upload Excel -->
+            <section class="upload-section">
+                <h2>📁 Upload Danh Sách Nhân Viên</h2>
+                <form action="/admin/upload" method="post" enctype="multipart/form-data" class="upload-form">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="excelFile" name="excelFile" accept=".xlsx,.xls" required>
+                        <label for="excelFile" class="file-input-label">Chọn file Excel</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">📤 Upload</button>
+                </form>
+                <p class="help-text">
+                    File Excel cần có các cột: <strong>Mã số nhân viên</strong>, <strong>Tên nhân viên</strong>, <strong>Phòng ban</strong>
+                </p>
+            </section>
+
+            <!-- Thêm nhân viên mới -->
+            <section class="add-employee-section">
+                <h2>👤 Thêm Nhân Viên Mới</h2>
+                <form action="/admin/employee" method="post" class="employee-form">
+                    <div class="form-row">
+                        <input type="text" name="ma_so_nhan_vien" placeholder="Mã số nhân viên" required>
+                        <input type="text" name="ten_nhan_vien" placeholder="Tên nhân viên" required>
+                        <input type="text" name="phong_ban" placeholder="Phòng ban" required>
+                        <button type="submit" class="btn btn-success">➕ Thêm</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Reset và thống kê -->
+            <section class="controls-section">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <h3>Tổng nhân viên</h3>
+                        <span class="stat-number"><%= employees.length %></span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Đã trúng thưởng</h3>
+                        <span class="stat-number"><%= employees.filter(emp => emp.da_trung).length %></span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Chưa trúng</h3>
+                        <span class="stat-number"><%= employees.filter(emp => !emp.da_trung).length %></span>
+                    </div>
+                </div>
+                <div class="control-buttons">
+                    <form action="/admin/reset" method="post" onsubmit="return confirm('Bạn có chắc muốn reset tất cả trạng thái quay thưởng?')" style="display: inline;">
+                        <button type="submit" class="btn btn-warning">🔄 Reset Trạng Thái</button>
+                    </form>
+                    
+                    <!-- Nút xóa toàn bộ danh sách nhân viên -->
+                    <button type="button" class="btn btn-danger" onclick="showClearEmployeesModal()">🗑️ Xóa Toàn Bộ Danh Sách</button>
+                </div>
+            </section>
+
+            <!-- Modal xác nhận xóa toàn bộ danh sách -->
+            <div id="clearEmployeesModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>⚠️ Xác Nhận Xóa Toàn Bộ Danh Sách</h3>
+                        <span class="close" onclick="hideClearEmployeesModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>CẢNH BÁO:</strong> Thao tác này sẽ xóa toàn bộ danh sách nhân viên và không thể khôi phục!</p>
+                        <p>Để xác nhận, vui lòng nhập: <code>DELETE_ALL_EMPLOYEES</code></p>
+                        <form id="clearEmployeesForm" action="/admin/clear-employees" method="post">
+                            <input type="text" id="confirmInput" name="confirm" placeholder="Nhập mã xác nhận..." required autocomplete="off">
+                            <div class="modal-actions">
+                                <button type="button" class="btn btn-secondary" onclick="hideClearEmployeesModal()">Hủy</button>
+                                <button type="submit" class="btn btn-danger" id="confirmClearBtn" disabled>Xóa Toàn Bộ</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danh sách nhân viên -->
+            <section class="employees-section">
+                <h2>👥 Danh Sách Nhân Viên (<%= employees.length %>)</h2>
+                <div class="table-wrapper">
+                    <table class="employees-table">
+                        <thead>
+                            <tr>
+                                <th>Mã số</th>
+                                <th>Tên nhân viên</th>
+                                <th>Phòng ban</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (employees.length === 0) { %>
+                                <tr>
+                                    <td colspan="5" class="no-data">Chưa có nhân viên nào</td>
+                                </tr>
+                            <% } else { %>
+                                <% employees.forEach(employee => { %>
+                                    <tr class="employee-row" data-id="<%= employee.id %>">
+                                        <td class="editable" data-field="ma_so_nhan_vien"><%= employee.ma_so_nhan_vien %></td>
+                                        <td class="editable" data-field="ten_nhan_vien"><%= employee.ten_nhan_vien %></td>
+                                        <td class="editable" data-field="phong_ban"><%= employee.phong_ban %></td>
+                                        <td>
+                                            <span class="status <%= employee.da_trung ? 'won' : 'pending' %>">
+                                                <%= employee.da_trung ? '🏆 Đã trúng' : '⏳ Chưa trúng' %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-edit" data-employee-id="<%= employee.id %>" onclick="editEmployee(this.dataset.employeeId)">✏️</button>
+                                            <button class="btn btn-sm btn-save" data-employee-id="<%= employee.id %>" onclick="saveEmployee(this.dataset.employeeId)" style="display:none">💾</button>
+                                            <button class="btn btn-sm btn-cancel" data-employee-id="<%= employee.id %>" onclick="cancelEdit(this.dataset.employeeId)" style="display:none">❌</button>
+                                            <form style="display:inline" action="/admin/employee/delete" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa nhân viên này?')">
+                                                <input type="hidden" name="id" value="<%= employee.id %>">
+                                                <button type="submit" class="btn btn-sm btn-delete">🗑️</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/js/admin.js"></script>
+</body>
+</html>

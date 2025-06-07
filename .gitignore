@@ -1,0 +1,27 @@
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Bỏ qua các file Excel trong thư mục uploads và temp
+uploads/*.xlsx
+uploads/*.xls
+temp/*.xlsx
+temp/*.xls
+
+# Bỏ qua các file log
+*.log
+
+# Bỏ qua các thư mục chứa file upload lớn hoặc file tạm thời (nếu cần)
+# Ví dụ: nếu thư mục uploads/ và temp/ không nên được commit
+# uploads/
+# temp/
+
+# Bỏ qua các file cấu hình local hoặc bí mật khác nếu có
+# ví dụ: config/local.json
